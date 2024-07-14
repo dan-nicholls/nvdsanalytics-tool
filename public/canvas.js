@@ -67,6 +67,27 @@ class Polygon {
       point.draw(ctx, color);
     });
   }
+
+  getRoiString() {
+    let roi = `roi-P${this.id}=`;
+    this.points.forEach((point) => {
+      console.log(point);
+      roi += `${point.x};${point.y};`;
+    });
+    console.log(roi);
+    return roi;
+  }
+
+  toString() {
+    let pointsStr = this.points.reduce((acc, currentVal, index, array) => {
+      if (index < this.points.length - 1) {
+        return acc + currentVal + ", ";
+      } else {
+        return acc + currentVal;
+      }
+    }, "");
+    return `Polygon (id: ${this.id}, points: ${pointsStr}, isComplete: ${this.isComplete})`;
+  }
 }
 
 class SidePanel {
@@ -98,6 +119,18 @@ class SidePanel {
   }
 }
 
+class outputPanel {
+  constructor() {
+    this.domElement = document.getElementById("outputDiv");
+  }
+
+  addLine(line) {
+    const lineElement = document.createElement("div");
+    lineElement.append(line);
+    this.domElement.appendChild(lineElement);
+  }
+}
+
 class AppFrame {
   constructor() {
     this.canvas = document.getElementById("imgCanvas");
@@ -108,6 +141,8 @@ class AppFrame {
 
     this.coordDiv = document.getElementById("coordDiv");
     this.sidePanel = new SidePanel();
+
+    this.outputPanel = new outputPanel();
 
     this.polygons = [];
     this.polygonsCounter = 0;
@@ -121,8 +156,8 @@ class AppFrame {
 
   startPolygon() {
     this.polygonsCounter++;
-    this.currentPolygon = new Polygon();
-    this.sidePanel.newGroup(`Polygon #${this.polygonsCounter}`);
+    this.currentPolygon = new Polygon(this.polygonsCounter);
+    this.sidePanel.newGroup(`Polygon #${this.currentPolygon.id}`);
   }
 
   endPolygon() {
@@ -130,7 +165,11 @@ class AppFrame {
       return;
     }
 
+    this.outputPanel.addLine(this.currentPolygon.getRoiString());
+
     this.currentPolygon.isComplete = true;
+    console.log(`${this.currentPolygon}`);
+
     this.currentPolygon.draw(this.ctx);
     this.polygons.push(this.currentPolygon);
     this.currentPolygon = undefined;
@@ -142,17 +181,21 @@ class AppFrame {
     let x = Math.floor(event.clientX - rect.left);
     let y = Math.floor(event.clientY - rect.top);
 
-    console.log(`Coordinates: (${x}, ${y})`);
+    // Scale the coordinates
+    const scaledX = Math.floor(x * this.img.naturalWidth / this.canvas.width);
+    const scaledY = Math.floor(y * this.img.naturalHeight / this.canvas.height);
 
     if (!this.currentPolygon) {
       this.startPolygon();
     }
 
     const point = new Point(x, y);
+    console.log(`${point}`);
+
     this.currentPolygon.addPoint(point);
     this.currentPolygon.draw(this.ctx);
 
-    this.sidePanel.appendCurrentGroup(`(${x}, ${y})`);
+    this.sidePanel.appendCurrentGroup(`(${scaledX}, ${scaledY})`);
   }
 
   onRightClickHandler(event) {
@@ -162,7 +205,8 @@ class AppFrame {
   }
 
   onImageLoad(event) {
-    const aspectRatio = this.img.width / this.img.height;
+    const aspectRatio = this.img.naturalWidth / this.img.naturalHeight;
+    console.log(`aspectRatio: ${aspectRatio}`);
     const maxWidth = this.img.naturalWidth;
     const minWidth = 600;
 
