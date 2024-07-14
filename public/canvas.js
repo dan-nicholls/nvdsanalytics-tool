@@ -15,10 +15,15 @@ class Point {
   isNear(x, y, radius = 5) {
     return Math.sqrt((this.x - x) ** 2 + (this.y - y) ** 2) < radius;
   }
+
+  toString() {
+    return `Point (${this.x}, ${this.y})`;
+  }
 }
 
 class Polygon {
-  constructor(points = [], isComplete = false) {
+  constructor(id, points = [], isComplete = false) {
+    this.id = id;
     this.points = points;
 
     if (isComplete) {
