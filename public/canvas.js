@@ -68,11 +68,13 @@ class Polygon {
     });
   }
 
-  getRoiString() {
+  getRoiString(xScale = 0, yScale = 0) {
     let roi = `roi-P${this.id}=`;
     this.points.forEach((point) => {
       console.log(point);
-      roi += `${point.x};${point.y};`;
+      const x = Math.floor(point.x * xScale);
+      const y = Math.floor(point.y * yScale);
+      roi += `${x};${y};`;
     });
     console.log(roi);
     return roi;
@@ -165,7 +167,9 @@ class AppFrame {
       return;
     }
 
-    this.outputPanel.addLine(this.currentPolygon.getRoiString());
+    this.outputPanel.addLine(
+      this.currentPolygon.getRoiString(this.xScale, this.yScale),
+    );
 
     this.currentPolygon.isComplete = true;
     console.log(`${this.currentPolygon}`);
@@ -178,12 +182,12 @@ class AppFrame {
 
   onClickHandler(event) {
     let rect = this.canvas.getBoundingClientRect();
-    let x = Math.floor(event.clientX - rect.left);
-    let y = Math.floor(event.clientY - rect.top);
+    let x = event.clientX - rect.left;
+    let y = event.clientY - rect.top;
 
     // Scale the coordinates
-    const scaledX = Math.floor(x * this.img.naturalWidth / this.canvas.width);
-    const scaledY = Math.floor(y * this.img.naturalHeight / this.canvas.height);
+    const scaledX = Math.floor(x * this.xScale);
+    const scaledY = Math.floor(y * this.yScale);
 
     if (!this.currentPolygon) {
       this.startPolygon();
@@ -212,6 +216,9 @@ class AppFrame {
 
     this.canvas.width = Math.max(minWidth, Math.min(maxWidth, 800));
     this.canvas.height = this.canvas.width / aspectRatio;
+
+    this.xScale = this.img.naturalWidth / this.canvas.width;
+    this.yScale = this.img.naturalHeight / this.canvas.height;
 
     this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
   }
