@@ -124,12 +124,24 @@ class SidePanel {
 class outputPanel {
   constructor() {
     this.domElement = document.getElementById("outputDiv");
+    this.buttonElement = document.getElementById("copyBtn");
+
+    this.buttonElement.onclick = this.onClickHandler.bind(this);
   }
 
   addLine(line) {
     const lineElement = document.createElement("div");
     lineElement.append(line);
     this.domElement.appendChild(lineElement);
+  }
+
+  onClickHandler(event) {
+    try {
+      navigator.clipboard.writeText(this.domElement.innerText);
+      console.log("Text copied to clipboard");
+    } catch {
+      console.error("Failed to copy text: ", err);
+    }
   }
 }
 
