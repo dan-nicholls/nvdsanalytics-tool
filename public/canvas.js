@@ -119,6 +119,10 @@ class SidePanel {
     dataDiv.append(data);
     this.currentGroup.appendChild(dataDiv);
   }
+
+  reset() {
+    this.domElement.innerText = "";
+  }
 }
 
 class outputPanel {
@@ -143,6 +147,10 @@ class outputPanel {
       console.error("Failed to copy text: ", err);
     }
   }
+
+  reset() {
+    this.domElement.innerText = "";
+  }
 }
 
 class AppFrame {
@@ -151,6 +159,7 @@ class AppFrame {
     this.ctx = this.canvas.getContext("2d");
 
     this.img = new Image();
+    this.imgInput = document.getElementById("fromFileBtn");
     this.img.src = "image.jpg";
 
     this.coordDiv = document.getElementById("coordDiv");
@@ -166,6 +175,7 @@ class AppFrame {
     this.img.onload = this.onImageLoad.bind(this);
     this.canvas.onclick = this.onClickHandler.bind(this);
     this.canvas.oncontextmenu = this.onRightClickHandler.bind(this);
+    this.imgInput.onchange = this.onFileChange.bind(this);
   }
 
   startPolygon() {
@@ -232,7 +242,29 @@ class AppFrame {
     this.xScale = this.img.naturalWidth / this.canvas.width;
     this.yScale = this.img.naturalHeight / this.canvas.height;
 
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  reset() {
+    this.sidePanel.reset();
+    this.outputPanel.reset();
+    this.polygons = [];
+    this.polygonsCounter = 0;
+    this.currentPolygon = undefined;
+  }
+
+  onFileChange(event) {
+    const file = event.target.files[0];
+    console.log(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    this.reset();
   }
 }
 
