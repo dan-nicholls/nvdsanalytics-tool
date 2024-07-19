@@ -100,6 +100,7 @@ class SidePanel {
 
   newGroup(title) {
     this.currentGroup = document.createElement("div");
+    this.currentGroup.classList.add("sidePanelItem");
     const groupTitle = document.createElement("h3");
     groupTitle.append(title);
     this.currentGroup.appendChild(groupTitle);

@@ -11,16 +11,19 @@
 
 <body>
   <div>
-    <h1>NVDS Analytics Tool</h1>
     <div id="appContainer">
+      <div id="titleContainer">
+        <h1>NVDS Analytics Tool</h1>
+      </div>
       <canvas id="imgCanvas"></canvas>
       <div id="imgControls">
         <input id="fromFileBtn" type="file" accept="image/*" />
       </div>
-      <div id="coordDiv">
+      <div id="coordContainer">
         <h2>Coordinates</h2>
+        <div id="coordDiv"></div>
       </div>
-      <div>
+      <div id="outputContainer">
         <h2>Output</h2>
         <div id="outputDiv"></div>
         <button id="copyBtn">Copy</button>
