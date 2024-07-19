@@ -1,51 +1,87 @@
+/* styles.css */
+
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f0f0f0;
 }
 
 h1 {
-  text-align: center;
-  color: #333;
+  margin: 20px 0;
 }
 
 #appContainer {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 20px;
+  display: grid;
+  grid-template-areas:
+    "title title"
+    "canvas coords"
+    "controls coords"
+    "output coords";
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  width: 80%;
   max-width: 1200px;
-  margin-left: 0;
-  margin-right: auto;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#titleContainer {
+  grid-area: title;
+  text-align: center;
 }
 
 #imgCanvas {
-  border: 1px solid #000;
-  max-width: 100%;
-  width: 100%;
-  height: auto;
-  min-width: 600px;
+  grid-area: canvas;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+}
+
+#imgControls {
+  grid-area: controls;
+  text-align: center;
+}
+
+#coordContainer {
+  grid-area: coords;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#outputContainer {
+  grid-area: output;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
 #coordDiv {
-  margin-left: 20px;
-  padding: 10px;
-  background-color: #e9e9e9;
-  border-radius: 5px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
 }
 
-#coordDiv h2 {
-  margin-top: 0;
-}
-
-#coordDiv div {
+.sidePanelItem>h3 {
   margin-bottom: 5px;
-  padding: 5px;
-  background-color: #fff;
-  border: 11px soilid #ddd;
-  border-radius: 3px;
+}
+
+#copyBtn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+  display: inline-block;
+}
+
+#copyBtn:hover {
+  background-color: #0056b3;
 }
