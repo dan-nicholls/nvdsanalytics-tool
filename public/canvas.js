@@ -1,97 +1,3 @@
-class Point {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  draw(ctx, color = "#000000") {
-    ctx.fillStyle = color;
-
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 5, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-
-  isNear(x, y, radius = 5) {
-    return Math.sqrt((this.x - x) ** 2 + (this.y - y) ** 2) < radius;
-  }
-
-  toString() {
-    return `Point (${this.x}, ${this.y})`;
-  }
-}
-
-class Polygon {
-  constructor(id, points = [], isComplete = false) {
-    this.id = id;
-    this.points = points;
-
-    if (isComplete) {
-      if (this.points.length <= 2) {
-        throw new Error("Invalid amount of points for a polygon");
-      }
-    }
-
-    this.isComplete = false;
-  }
-
-  addPoint(point) {
-    this.points.push(point);
-  }
-
-  setComplete() {
-    this.isComplete = true;
-  }
-
-  draw(ctx) {
-    ctx.beginPath();
-    const color = this.isComplete ? "#00ff00" : "#ff0000";
-    ctx.strokeStyle = color;
-
-    for (let i = 0; i < this.points.length - 1; i++) {
-      ctx.moveTo(this.points[i].x, this.points[i].y);
-      ctx.lineTo(this.points[i + 1].x, this.points[i + 1].y);
-    }
-
-    if (this.isComplete) {
-      let pointEnd = this.points[this.points.length - 1];
-      let pointStart = this.points[0];
-
-      ctx.moveTo(pointEnd.x, pointEnd.y);
-      ctx.lineTo(pointStart.x, pointStart.y);
-    }
-
-    ctx.stroke();
-
-    this.points.forEach((point) => {
-      point.draw(ctx, color);
-    });
-  }
-
-  getRoiString(xScale = 0, yScale = 0) {
-    let roi = `roi-P${this.id}=`;
-    this.points.forEach((point) => {
-      console.log(point);
-      const x = Math.floor(point.x * xScale);
-      const y = Math.floor(point.y * yScale);
-      roi += `${x};${y};`;
-    });
-    console.log(roi);
-    return roi;
-  }
-
-  toString() {
-    let pointsStr = this.points.reduce((acc, currentVal, index, array) => {
-      if (index < this.points.length - 1) {
-        return acc + currentVal + ", ";
-      } else {
-        return acc + currentVal;
-      }
-    }, "");
-    return `Polygon (id: ${this.id}, points: ${pointsStr}, isComplete: ${this.isComplete})`;
-  }
-}
-
 class SidePanel {
   constructor() {
     this.domElement = document.getElementById("coordDiv");
@@ -154,6 +60,22 @@ class outputPanel {
   }
 }
 
+const MODE_OBJECTS = {
+  "roi": Polygon,
+  "lc": LineCrossing,
+};
+
+// let getModeObj = (mode) => {
+//   switch (mode) {
+//     case "roi":
+//       return Polygon;
+//     case "lc":
+//       return LineCrossing;
+//     default:
+//       throw new Error("Invalid mode");
+//   }
+// };
+
 class AppFrame {
   constructor() {
     this.canvas = document.getElementById("imgCanvas");
@@ -168,38 +90,50 @@ class AppFrame {
 
     this.outputPanel = new outputPanel();
 
-    this.polygons = [];
-    this.polygonsCounter = 0;
-    this.currentPolygon = undefined;
-    // this.currentPolygonDiv = undefined;
+    this.currentMode = "roi";
+    this.roiButton = document.getElementById("roiModeButton");
+    this.lcButton = document.getElementById("lcModeButton");
+
+    this.items = [];
+    this.itemCounter = 0;
+    this.currentItem = undefined;
 
     this.img.onload = this.onImageLoad.bind(this);
     this.canvas.onclick = this.onClickHandler.bind(this);
     this.canvas.oncontextmenu = this.onRightClickHandler.bind(this);
     this.imgInput.onchange = this.onFileChange.bind(this);
+    this.roiButton.onclick = this.onModeChange.bind(this, "roi");
+    this.lcButton.onclick = this.onModeChange.bind(this, "lc");
   }
 
-  startPolygon() {
-    this.polygonsCounter++;
-    this.currentPolygon = new Polygon(this.polygonsCounter);
-    this.sidePanel.newGroup(`Polygon #${this.currentPolygon.id}`);
+  startItem() {
+    this.itemCounter++;
+    const ObjectType = MODE_OBJECTS[this.currentMode];
+    if (!ObjectType) {
+      throw new Error(`Invalid mode: ${this.currentMode}`);
+    }
+    this.currentItem = new ObjectType(this.itemCounter);
+    this.sidePanel.newGroup(
+      `${this.currentMode.charAt(0).toUpperCase() + this.currentMode.slice(1)
+      } #${this.currentItem.id}`,
+    );
   }
 
-  endPolygon() {
-    if (this.currentPolygon.points.length <= 2) {
+  endItem() {
+    if (this.currentItem.points.length <= 2) {
       return;
     }
 
     this.outputPanel.addLine(
-      this.currentPolygon.getRoiString(this.xScale, this.yScale),
+      this.currentItem.getConfigString(this.xScale, this.yScale),
     );
 
-    this.currentPolygon.isComplete = true;
-    console.log(`${this.currentPolygon}`);
+    this.currentItem.isComplete = true;
+    console.log(`${this.currentItem}`);
 
-    this.currentPolygon.draw(this.ctx);
-    this.polygons.push(this.currentPolygon);
-    this.currentPolygon = undefined;
+    this.currentItem.draw(this.ctx);
+    this.items.push(this.currentItem);
+    this.currentItem = undefined;
     this.sidePanel.endGroup();
   }
 
@@ -212,22 +146,25 @@ class AppFrame {
     const scaledX = Math.floor(x * this.xScale);
     const scaledY = Math.floor(y * this.yScale);
 
-    if (!this.currentPolygon) {
-      this.startPolygon();
+    if (!this.currentItem) {
+      this.startItem();
     }
 
     const point = new Point(x, y);
     console.log(`${point}`);
 
-    this.currentPolygon.addPoint(point);
-    this.currentPolygon.draw(this.ctx);
-
+    this.currentItem.addPoint(point);
+    this.currentItem.draw(this.ctx);
     this.sidePanel.appendCurrentGroup(`(${scaledX}, ${scaledY})`);
+
+    if (this.currentItem.isComplete) {
+      this.endItem();
+    }
   }
 
   onRightClickHandler(event) {
     event.preventDefault();
-    this.endPolygon();
+    this.endItem();
     return false;
   }
 
@@ -250,9 +187,12 @@ class AppFrame {
   reset() {
     this.sidePanel.reset();
     this.outputPanel.reset();
-    this.polygons = [];
-    this.polygonsCounter = 0;
-    this.currentPolygon = undefined;
+    this.items = [];
+    this.itemCounter = 0;
+    this.currentItem = undefined;
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
   }
 
   onFileChange(event) {
@@ -265,6 +205,15 @@ class AppFrame {
       };
       reader.readAsDataURL(file);
     }
+    this.reset();
+  }
+
+  onModeChange(mode) {
+    if (mode === this.currentMode) {
+      return;
+    }
+    console.log(`MODE: ${mode}`);
+    this.currentMode = mode;
     this.reset();
   }
 }
