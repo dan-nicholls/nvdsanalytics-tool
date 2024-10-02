@@ -18,6 +18,7 @@ h1 {
   display: grid;
   grid-template-areas:
     "title title"
+    "modeControls modeControls"
     "canvas coords"
     "controls coords"
     "output coords";
@@ -40,6 +41,11 @@ h1 {
 
 #imgControls {
   grid-area: controls;
+  text-align: center;
+}
+
+#modeControls {
+  grid-area: modeControls;
   text-align: center;
 }
 
