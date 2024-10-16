@@ -46,7 +46,7 @@ pnpm install
 
 ## Screenshots
 
-Insert image here
+![Screenshot](images/screenshot.png)
 
 ## Todo
 
